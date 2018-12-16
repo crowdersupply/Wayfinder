@@ -438,7 +438,7 @@ class Wayfinder {
             
             $fields = "DISTINCT {$fields}";
             $from   = '[+prefix+]site_content sc LEFT JOIN [+prefix+]document_groups dg ON dg.document=sc.id';
-            $where  = sprintf('sc.published=1 AND sc.deleted=0 %s %s AND sc.id IN (%s) GROUP BY sc.id', $access, $menuWhere, implode(',',$ids));
+            $where  = sprintf('sc.published=1 AND sc.deleted=0 %s %s AND sc.id IN (%s) GROUP BY sc.id,menutitle, sc.pagetitle, sc.introtext, sc.menuindex, sc.published, sc.hidemenu, sc.parent, sc.isfolder, sc.description, sc.alias, sc.longtitle, sc.type, sc.content, sc.template, sc.link_attributes', $access, $menuWhere, implode(',',$ids));
             $sort   = "{$sort} {$this->_config['sortOrder']}";
             
             //run the query
