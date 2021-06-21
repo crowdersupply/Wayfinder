@@ -235,6 +235,7 @@ class Wayfinder {
         $ph['wf.refid']        = $refid;
         $ph['wf.menuindex']    = $resource['menuindex'];
         $ph['wf.iterator']     = $curNum;
+        // #crowder - TODO - add wf.content, any others?
         
         //Add document variables to the placeholder array
         foreach ($resource as $dvName => $dvVal) {
@@ -384,7 +385,11 @@ class Wayfinder {
         if ($this->_config['displayStart'] && $this->_config['id'] !== 0) {
             $ids[] = $this->_config['id'];
         }
-        if (!empty($ids)) {
+        // #crowder
+        if ($this->_config['onlyIncludeDocs']) {
+          $ids='';
+        }
+        if (!empty($ids) || $this->_config['includeDocs']) {
             //Setup the fields for the query
             $fields = explode(',','id,menutitle,pagetitle,introtext,menuindex,published,hidemenu,parent,isfolder,description,alias,longtitle,type,content,template,link_attributes');
             foreach($fields as $i=>$v) {
@@ -395,9 +400,10 @@ class Wayfinder {
             $fields = join(',', $fields);
             
             //Determine sorting
-            if (strtolower($this->_config['sortBy'])=='random')
-                $sort = 'rand()';
-            else {
+            if (strtolower($this->_config['sortBy'])=='random') {
+              $sort = 'rand()';
+            }
+            elseif ($this->_config['sortBy']) {
                 // modify field names to use sc. table reference
                 $_ = explode(',', $this->_config['sortBy']);
                 foreach($_ as $i=>$v) {
@@ -405,7 +411,14 @@ class Wayfinder {
                 }
                 $sort = implode(',', $_);
             }
-            
+            elseif ($this->_config['includeDocs']) {
+              // #crowder, if no sort, and using includeDocs, default to 'doclist' style sorting
+              $sort = ' FIELD (sc.id,'.$this->_config['includeDocs'].') ';
+            } else {
+              // #crowder - error, no sort and no includeDocs
+              // just don't use sorting
+            }
+
             // build query
             if($modx->isFrontend()) {
                 if(!$this->_config['showPrivate']) $access = "sc.privateweb=0";
@@ -435,12 +448,19 @@ class Wayfinder {
             //add the limit to the query
             if ($this->_config['limit']) $limit = sprintf('0, %s', $this->_config['limit']);
             else                         $limit = '';
-            
+
+            $idIn = $ids ? (' AND sc.id IN (' . implode(',',$ids) . ') ') : '';
+
             $fields = "DISTINCT {$fields}";
             $from   = '[+prefix+]site_content sc LEFT JOIN [+prefix+]document_groups dg ON dg.document=sc.id';
-            $where  = sprintf('sc.published=1 AND sc.deleted=0 %s %s AND sc.id IN (%s) GROUP BY sc.id,menutitle, sc.pagetitle, sc.introtext, sc.menuindex, sc.published, sc.hidemenu, sc.parent, sc.isfolder, sc.description, sc.alias, sc.longtitle, sc.type, sc.content, sc.template, sc.link_attributes', $access, $menuWhere, implode(',',$ids));
-            $sort   = "{$sort} {$this->_config['sortOrder']}";
-            
+            // #crowder - removed: 'sc.published=1 AND ' in $where
+            $where  = sprintf('sc.deleted=0 %s %s %s GROUP BY sc.id,menutitle, sc.pagetitle, sc.introtext, sc.menuindex, sc.published, sc.hidemenu, sc.parent, sc.isfolder, sc.description, sc.alias, sc.longtitle, sc.type, sc.content, sc.template, sc.link_attributes', $access, $menuWhere, $idIn);
+
+            // #crowder
+            if ($sort) {
+              $sort = "{$sort} {$this->_config['sortOrder']}";
+            }
+
             //run the query
             $result = $modx->db->select($fields,$from,$where,$sort,$limit);
             

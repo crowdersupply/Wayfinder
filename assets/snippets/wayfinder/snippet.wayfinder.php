@@ -48,6 +48,8 @@ $wf->_config = array(
 	'level' => isset($level) ? intval($level) : 0,
 	'includeDocs' => isset($includeDocs) ? $includeDocs : 0,
 	'excludeDocs' => isset($excludeDocs) ? $excludeDocs : 0,
+  // #crowder
+  'onlyIncludeDocs' => isset($onlyIncludeDocs) ? $onlyIncludeDocs : 0,
 	'where' => isset($where) ? $where : '',
 	'ph' => isset($ph) ? $ph : FALSE,
 	'debug' => isset($debug) ? TRUE : FALSE,
@@ -57,7 +59,8 @@ $wf->_config = array(
 	'fullLink' => isset($fullLink) ? $fullLink : FALSE,
 	'nl' => isset($removeNewLines) ? '' : "\n",
 	'sortOrder' => isset($sortOrder) ? strtoupper($sortOrder) : 'ASC',
-	'sortBy' => isset($sortBy) ? $sortBy : 'menuindex',
+	// #crowder - no default sort, (was menuindex)
+	'sortBy' => isset($sortBy) ? $sortBy : '',
 	'limit' => isset($limit) ? $limit : 0,
 	'cssTpl' => isset($cssTpl) ? $cssTpl : FALSE,
 	'jsTpl' => isset($jsTpl) ? $jsTpl : FALSE,
